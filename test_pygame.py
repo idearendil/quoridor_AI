@@ -97,6 +97,8 @@ SB = 0
 
 state_memory = []
 state = quoridor.QuoridorEnv().initialize_state()
+visible_polls_memory = []
+visible_polls = np.zeros((8, 8), dtype=np.int8)
 
 agents = [MinimaxAgent(0, 0), MinimaxAgent(1, 0)]
 whose_turn = 0
@@ -115,7 +117,11 @@ while SB == 0:
             if event.key == pygame.K_a:
                 if not state.done:
                     state_memory.append(state)
-                    state = quoridor.QuoridorEnv().step(state, whose_turn, agents[whose_turn](state))
+                    action = agents[whose_turn](state)
+                    state = quoridor.QuoridorEnv().step(state, whose_turn, action)
+                    visible_polls_memory.append(visible_polls)
+                    if action[0] > 0:
+                        visible_polls[action[1]][action[2]] = 1
                     if state.done:
                         msg_over()
                     whose_turn = 1 - whose_turn
@@ -124,6 +130,8 @@ while SB == 0:
             elif event.key == pygame.K_p:
                 state = state_memory[-1]
                 state_memory.pop(-1)
+                visible_polls = visible_polls_memory[-1]
+                visible_polls_memory.pop(-1)
                 whose_turn = 1 - whose_turn
         if pygame.mouse.get_pressed()[0]:
             if not mouse_clicked:
@@ -140,6 +148,7 @@ while SB == 0:
                             else:
                                 state_memory.append(state)
                                 state = next_state
+                                visible_polls_memory.append(visible_polls)
                                 whose_turn = 1 - whose_turn
                                 if state.done:
                                     msg_over()
@@ -154,6 +163,8 @@ while SB == 0:
                             else:
                                 state_memory.append(state)
                                 state = next_state
+                                visible_polls_memory.append(visible_polls)
+                                visible_polls[action[1]][action[2]] = 1
                                 whose_turn = 1 - whose_turn
                                 if state.done:
                                     msg_over()
@@ -168,6 +179,8 @@ while SB == 0:
                             else:
                                 state_memory.append(state)
                                 state = next_state
+                                visible_polls_memory.append(visible_polls)
+                                visible_polls[action[1]][action[2]] = 1
                                 whose_turn = 1 - whose_turn
                                 if state.done:
                                     msg_over()
@@ -191,6 +204,10 @@ while SB == 0:
                 pygame.draw.rect(screen, black, horizontal_wall[i][j])
             if state.board[3][j][i]:
                 pygame.draw.rect(screen, black, vertical_wall[j][i])
+    for i in range(8):
+        for j in range(8):
+            if visible_polls[i][j]:
+                pygame.draw.rect(screen, black, center_poll[i][j])
 
     mospos = pygame.mouse.get_pos()
     for i in range(9):
